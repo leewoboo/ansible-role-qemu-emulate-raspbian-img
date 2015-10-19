@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Lee Woboo
+  description: installs and configures qemu, mount rasbian image and run qemu to emulate raspbian
+  license: GPLv3
+  min_ansible_version: 1.6
+  platforms:
+   - name: Debian
+     versions:
+      - wheezy
+  categories:
+   - system
+   - networking
+dependencies: []

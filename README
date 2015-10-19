@@ -1,0 +1,60 @@
+* Work in progress... *
+
+ansible-role-qemu-emulate-raspbian-img
+========================================
+
+This role install and configures qemu, mount a raspbian image and run qemu to emulate raspbian.
+This role has only been tested in Debian.
+
+Requirements
+------------
+
+This role requires Ansible 1.6 or higher.
+
+Role Variables
+--------------
+
+All these variables are defined in defaults/main.yml and will be used by default.
+    kernel-qemu_url: http://xecdesign.com/downloads/linux-qemu/kernel-qemu
+    kernel-qemu_sha256sum:
+    host_user: user
+    host_user_home: "/home/{{ user }}"
+    raspbian_dir: "{{ host_user_home }}/raspbian_imgs"
+    raspbian_image: 2014-01-07-wheezy-raspbian.img
+    raspbian_zip_sha256sum: 9d0afbf932ec22e3c29d793693f58b0406bcab86
+    raspbian_zip_url: http://212.187.212.70/bt/4627bda58f99162374ecb442a24cf6d4db2f1e09/data/2014-01-07-wheezy-raspbian.zip
+    raspbian_zip: 2014-01-07-wheezy-raspbian.zip
+    generic_image: true                                                    
+    raspbian_mount_rootfs_dir: /mnt/raspbianrootf                        
+    raspbian_mount_config_dir: /mnt/raspbianconfig 
+
+Dependencies
+------------
+
+Example Playbook
+-----------------
+
+For convenience, there's an ansible project (ansible-prj-qemu-emulate-raspbian-img) configured to use this role
+
+    - hosts: localhost
+
+      roles:
+
+            - { role: ansible-role-qemu-emulate-raspbian-img,
+              }
+
+    #- hosts: raspberry
+    #  roles: 
+    #     - { role: ansibe-role-raspbian-configure,
+    #       }
+
+License
+-------
+
+GPLv3
+
+Author Information
+------------------
+
+Lee Woboo
+

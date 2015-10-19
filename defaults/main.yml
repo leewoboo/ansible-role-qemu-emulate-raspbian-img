@@ -1,0 +1,20 @@
+---
+kernel-qemu_url: http://xecdesign.com/downloads/linux-qemu/kernel-qemu
+kernel-qemu_sha256sum: 
+host_user: user
+host_user_home: "/home/{{ user }}"
+raspbian_dir: "{{ host_user_home }}/raspbian_imgs"
+raspbian_image: 2014-01-07-wheezy-raspbian.img
+#custom_image: 2014-01-07-wheezy-raspbian-wificlient-tor.img 
+raspbian_zip_sha256sum: 9d0afbf932ec22e3c29d793693f58b0406bcab86
+#raspbian_zip_url: http://212.187.212.70/bt/4627bda58f99162374ecb442a24cf6d4db2f1e09/data/2014-06-20-wheezy-raspbian.zip
+raspbian_zip_url: http://212.187.212.70/bt/4627bda58f99162374ecb442a24cf6d4db2f1e09/data/2014-01-07-wheezy-raspbian.zip
+raspbian_zip: 2014-01-07-wheezy-raspbian.zip
+generic_image: true
+raspbian_image: 2015-02-16-raspbian-wheezy.img
+raspbian_zip_sha256sum: b71d7b61f44e9bd582df71c9be494c271c97650f
+raspbian_zip_url: "http://downloads.raspberrypi.org/raspbian/images/raspbian-2015-02-17/{{ raspbian_image }}"
+raspbian_zip: 2015-02-16-raspbian-wheezy.zip                  
+                    
+raspbian_mount_rootfs_dir: /mnt/raspbianrootf
+raspbian_mount_config_dir: /mnt/raspbianconfig

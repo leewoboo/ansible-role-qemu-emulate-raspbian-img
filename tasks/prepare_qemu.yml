@@ -1,0 +1,133 @@
+---
+
+#- name: ensure raspbian qemu emulation is possible
+#  shell: qemu-system-arm -cpu ?|grep arm1176
+#  ## FIXME: how to notifiy user whether qemu emulation is possible
+#  #register:
+#  tags:
+#    - setupqemuraspbian
+
+# TODO: configure sources list with wheezy-backports
+
+- name: ensure required packages are present
+  apt:
+    pkg={{ item }}
+    state=latest
+    install_recommends=no
+  with_items:
+    #TODO: version for wheeze backports
+    - qemu-system-arm
+  sudo: true
+
+# TODO:
+# alternatively, download and install qemu from source
+# http://xecdesign.com/compiling-qemu/
+# /configure --target-list="arm-softmmu arm-linux-user" --enable-sdl --prefix=/home/user/_share
+
+#qemu is an ARM emulator, and qemu-user-static and binfmt-support allows us to run ARM executables without emulating the ARM kernel. (How cool is that!?!)
+  tags:
+    - setupqemuraspbian
+
+- name: ensure kernel-qemu is downloaded
+  get_url:
+    url={{ kernel-qemu_url }}
+    dest={{ raspbian_dir }}/kernel-qemu
+    sha256sum={{ kernel-qemu_sha256sum }}
+  tags:
+    - setupqemuraspbian
+
+- name: ensure raspbian image is downloaded
+  get_url:
+    url={{ raspbian_zip_url }}
+    dest={{ raspbian_dir }}/{{ raspbian_zip_url }}
+    sha256sum={{ raspbian_zip_sha256sum }}
+  when: generic_image is defined and generic_image
+  tags:
+    - setupraspbian
+
+- name: gather state of raspbian image
+  stat: path={{ raspbian_dir }}/{{ raspbian_image }}
+  register: raspbian_image_st
+  when: generic_image is defined and generic_image
+  tags:
+    - setupraspbian
+
+- name: ensure raspbian zip extracted
+  command: unzip {{ raspbian_dir }}/{{ raspbian_zip }}
+  when: raspbian_image_st.stat.isfile is not defined and generic_image is defined and generic_image
+  tags:
+    - setupraspbian
+
+## mount, chroot?
+- name: ensure raspbian mnt rootfs dir exists
+  file:
+    state=directory
+    path={{ raspbian_mount_rootfs_dir }}
+    owner={{ host_user }}
+  tags:
+    - mountraspbianimg
+
+- name: ensure raspbian mnt config dir exists
+  file:
+    state=directory
+    path={{ raspbian_mount_config_dir }}
+    owner={{ host_user }}
+  tags:
+    - mountraspbianimg
+
+- name: ensure raspbian image rootfs is mounted
+  mount:
+    name={{ raspbian_mount_rootfs_dir }}
+    src={{ raspbian_dir }}/{{ raspbian_image }}
+    fstype=ext4
+    opts=loop,offset=62914560
+    state=present
+  tags:
+    - mountraspbianimg
+
+- name: ensure raspbian image config is mounted
+  mount:
+    name={{ raspbian_mount_config_dir }}
+    src={{ raspbian_dir }}/{{ raspbian_image }}
+    fstype=vfat
+    opts=loop,offset=4194304
+    state=present
+  tags:
+    - mountraspbianimg
+
+## binfmt
+## FIXME: do this loading the module
+- name: ensure
+  shell: echo ':arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/local/bin/qemu-arm:' > /proc/sys/fs/binfmt_misc/register
+
+
+## ld.so
+## FIXME: remove when qemu not needed anymore?
+- name: ensure
+  lineinfile:
+    src={{ raspbian_mount_rootfs_dir }}/etc/ld.so.preload
+    line="#/usr/lib/arm-linux-gnueabihf/libcofi_rpi.so"
+    regexp="/usr/lib/arm-linux-gnueabihf/libcofi_rpi.so"
+    state=present
+
+## FIXME: remove when qemu not needed anymore?
+- name: ensure qemu udev rules file is copied (optional)
+  file:
+    src=etc/udev/rules.d/90-qemu.rules
+    dest={{ raspbian_mount_rootfs_dir }}/etc/udev/rules.d/90-qemu.rules
+
+## FIXME: remove when qemu not needed anymore, only for chroot?
+- name: ensure qemu-arm-static is copied
+  file:
+    src=/usr/bin/qemu-arm-static
+    dest={{ raspbian_mount_rootfs_dir }}/usr/bin/qemu-arm-static
+
+
+## Starting qemu in user mode linux, when asking DHCP, will get an ip from xx
+## with the port forwarding argument, it can be accessed by ssh -p 2222 pi@127.0.0.1
+## FIXME: how to check is not already started
+- name: start qemu with rasbian and user mode networking
+  command: qemu-system-arm -kernel kernel-qemu -cpu arm1176 -m 256 -M versatilepb -no-reboot -serial stdio -append "root=/dev/sda2 panic=1" -hda {{ raspbian_image }} -net nic -net user,hostfwd=tcp::2222-:22
+  tags:
+    - runqemurasbian
+
